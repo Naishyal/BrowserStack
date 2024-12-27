@@ -13,16 +13,13 @@ import time
 from collections import Counter
 import re
 
-# BrowserStack Credentials (replace with your own username and access key)
 BROWSERSTACK_USERNAME = 'naishyalpatel_6nDdvC'
 BROWSERSTACK_ACCESS_KEY = 'xEaXzBopJNyxpJEgwYFz'
 
-# BrowserStack Local Testing Setup
 local = Local()
 local_args = { "key": "xEaXzBopJNyxpJEgwYFz" }
 local.start(**local_args)
 
-# List of browsers and devices for testing
 browsers = [
     {"os": "Windows", "os_version": "10", "browser": "chrome", "browser_version": "latest", "name": "Desktop Chrome"},
     {"os": "Windows", "os_version": "10", "browser": "firefox", "browser_version": "latest", "name": "Desktop Firefox"},
@@ -31,23 +28,18 @@ browsers = [
     {"os": "iOS", "os_version": "14", "browser": "iphone", "browser_version": "latest", "name": "Mobile Safari"}
 ]
 
-# Initialize the Translator
 translator = Translator()
 
-# Create a function to run the test on BrowserStack for each browser/device combination
 def run_browserstack_test(capabilities):
     driver = webdriver.Remote(
         command_executor=f'https://naishyalpatel_6nDdvC:xEaXzBopJNyxpJEgwYFz@hub-cloud.browserstack.com/wd/hub',
         desired_capabilities=capabilities
     )
     
-    # Start the test on BrowserStack
     try:
-        # Open El País website and navigate to Opinión section
         driver.get("https://elpais.com/")
         time.sleep(5)
 
-        # Navigate to the Opinión section
         try:
             opinion_section = WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.LINK_TEXT, "Opinión"))
@@ -58,8 +50,7 @@ def run_browserstack_test(capabilities):
         except Exception as e:
             print(f"Error navigating to the Opinión section on {capabilities['name']}: {e}")
 
-        # Scrape the first 5 articles
-        translated_titles = []  # List to store translated titles
+        translated_titles = []  
         try:
             articles = driver.find_elements(By.XPATH, "//article")[:5]
             print(f"Found {len(articles)} articles to scrape on {capabilities['name']}.")
@@ -73,7 +64,6 @@ def run_browserstack_test(capabilities):
                     print(f"Translated title of article {idx} on {capabilities['name']}: {translated_title}")
                     translated_titles.append(translated_title)
 
-                    # Extract content (assuming it's inside a paragraph tag <p>)
                     content = article.find_element(By.XPATH, ".//p[contains(@class, 'c_d')]").text
                     print(f"Content of article {idx} on {capabilities['name']}: {content[:150]}...")
                     
@@ -101,11 +91,9 @@ def run_browserstack_test(capabilities):
     finally:
         driver.quit()
 
-# Run the tests in parallel for all browser/device combinations
 from concurrent.futures import ThreadPoolExecutor
 
 with ThreadPoolExecutor(max_workers=5) as executor:
     executor.map(run_browserstack_test, browsers)
 
-# Stop the BrowserStack Local Testing
 local.stop()
